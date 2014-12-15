@@ -1,0 +1,6 @@
+*~
+@*
+.DS_Store
+xcuserdata
+**/*.dxbuild.xcodeproj/project.*
+**/*.dxbuild.xcodeproj/xcuserdata/
