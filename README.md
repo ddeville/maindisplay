@@ -1,1 +1,1 @@
-A simple command line utility to get the frame of the frontmost window on OS X
+A simple command line utility to get the frame of the display that has the frontmost window on OS X
