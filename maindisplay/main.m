@@ -54,22 +54,52 @@ static CGDirectDisplayID display_id_for_window(CFDictionaryRef window_info) {
     return display_id;
 }
 
+static void write_frame_to_output(CGRect frame) {
+    fprintf(stdout, "%f, %f, %f, %f\n", frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
+}
+
+typedef enum {
+    ArgumentMain = 0,
+    ArgumentKey = 1,
+} Argument;
+
+/*
+    Parameters:
+        --main - retrieve the main display frame
+        --key  - retrieve the frame of the display that has the frontmost window
+ */
 int main(int argc, const char **argv) {
-    @autoreleasepool {
-        pid_t current_process = pid_for_frontmost_application();
-        CFArrayRef current_process_windows = windows_for_process(current_process);
-
-        CGRect display_frame = CGRectZero;
-
-        if (CFArrayGetCount(current_process_windows) != 0) {
-            CFDictionaryRef current_process_main_window = CFArrayGetValueAtIndex(current_process_windows, 0);
-            CGDirectDisplayID display_id = display_id_for_window(current_process_main_window);
-            display_frame = CGDisplayBounds(display_id);
+    Argument argument = ArgumentMain;
+    if (argc > 1) {
+        if (strcmp(argv[1], "--main") == 0) {
+            argument = ArgumentMain;
+        } else if (strcmp(argv[1], "--key") == 0) {
+            argument = ArgumentKey;
+        } else {
+            printf("Use maindisplay [--main] [--key]");
+            return -1;
         }
-
-        CFRelease(current_process_windows);
-
-        fprintf(stdout, "%f, %f, %f, %f\n", display_frame.origin.x, display_frame.origin.y, display_frame.size.width, display_frame.size.height);
     }
+
+    if (argument == ArgumentMain) {
+        CGRect main_display_frame = CGDisplayBounds(CGMainDisplayID());
+        write_frame_to_output(main_display_frame);
+        return 0;
+    }
+
+    pid_t current_process = pid_for_frontmost_application();
+    CFArrayRef current_process_windows = windows_for_process(current_process);
+
+    CGRect display_frame = CGRectZero;
+
+    if (CFArrayGetCount(current_process_windows) != 0) {
+        CFDictionaryRef current_process_main_window = CFArrayGetValueAtIndex(current_process_windows, 0);
+        CGDirectDisplayID display_id = display_id_for_window(current_process_main_window);
+        display_frame = CGDisplayBounds(display_id);
+    }
+
+    CFRelease(current_process_windows);
+
+    write_frame_to_output(display_frame);
     return 0;
 }
